@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SwitchMoto</string>
+    <string name="hola_mundo">Hola Mundo!</string>
+    <string name="boton">Boton</string>
+    <string name="enlazar_moto">Enlazar Moto</string>
+    <string name="bloquear_switch">Bloquear Switch</string>
+    <string name="registrar_huella">Registrar Huella</string>
+</resources>
