@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     private int selectedIndex = -1;
     private HashMap<String, String> deviceMap;
     private boolean isConnected = false;
-    private String value = "true";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,13 +85,14 @@ public class MainActivity extends AppCompatActivity {
 
         botonEnlazarMoto = findViewById(R.id.botonEnlazarMoto); //Encontrar boton por su ID
 
+        //Asignar el evento OnClickListener al boton
         botonEnlazarMoto.setOnClickListener(v -> {
             if (isConnected) {
                 desconectarDispositivo();
             } else {
                 mostrarDispositivosVinculados();
             }
-        }); //Asignar el evento OnClickListener al boton
+        });
 
         /*------------------------------------------------------------------------------------------------------*/
         // Huella dactilar
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         enableButtonRunnable = new Runnable() {
             @Override
             public void run() {
-                enableButton();
+                habilitarBoton();
             }
         };
 
@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
             ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.select_dialog_singlechoice, listaNombresDispositivos);
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecciona un dispositivo")
+            builder.setTitle("Selecciona un Dispositivo")
                     .setSingleChoiceItems(adapter, selectedIndex, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -184,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                     showToast("Conexión exitosa");
                 } catch (IOException e) {
                     e.printStackTrace();
-                    showToast("Error al conectar");
+                    showToast("Error al conectarse");
                 }
             }
         }).start();
@@ -206,14 +206,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void sendData(String data) {
+    private void enviarDato(String data) {
         if (outputStream != null) {
             try {
                 outputStream.write(data.getBytes());
-                showToast("Datos enviados");
             } catch (IOException e) {
                 e.printStackTrace();
-                showToast("Error al enviar datos");
+                showToast("Error al Hab/Deshab switch ");
             }
         }
     }
@@ -232,8 +231,6 @@ public class MainActivity extends AppCompatActivity {
         switch (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
             case BiometricManager.BIOMETRIC_SUCCESS:
                 // El dispositivo puede realizar autenticación biométrica
-                Toast.makeText(this, "Autenticacion biometrica disponible",
-                        Toast.LENGTH_SHORT).show();
                 break;
             case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
                 // No hay hardware biométrico
@@ -258,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthenticationError(int errorCode, CharSequence errString) {
                 super.onAuthenticationError(errorCode, errString);
                 // Manejar error de autenticación
-                Toast.makeText(getApplicationContext(), "Error de autenticación: " + errString,
+                Toast.makeText(getApplicationContext(), "Error: " + errString,
                         Toast.LENGTH_SHORT).show();
             }
 
@@ -267,20 +264,9 @@ public class MainActivity extends AppCompatActivity {
                 super.onAuthenticationSucceeded(result);
                 // Autenticación exitosa
 
-                //Valor a enviar al dispositivo externo
-                if(value.equals("true")){
-                    //Enviar el valor true por Bluetooth
-                    sendData(value);
-                    value = "false";
-                }else{
-                    //Enviar el valor false por Bluetooth
-                    sendData(value);
-                    value = "true";
-                }
+                enviarDato("1");
 
-                // Mostrar un mensaje al usuario indicando que la autenticación fue exitosa
-                Toast.makeText(getApplicationContext(), "Autenticación exitosa ",
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Autenticación Exitosa", Toast.LENGTH_SHORT).show();
 
                 // Restablecer el contador de intentos fallidos
                 failedAttempts = 0;
@@ -290,37 +276,32 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                // Autenticación fallida
-
-                // Mostrar un mensaje al usuario indicando que la autenticación falló
-                Toast.makeText(getApplicationContext(),
-                        "Autenticación fallida. Inténtalo de nuevo.", Toast.LENGTH_SHORT).show();
 
                 failedAttempts++; //Aumentar el contador de intentos fallidos
 
                 //Deshabilitar el boton en caso de que se acaben los intentos
                 if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
-                    disableButton();
+                    deshabilitarBoton();
                     handler.postDelayed(enableButtonRunnable, LOCKOUT_DURATION);
                 }
             }
         });
 
         BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Autenticación biométrica")
-                .setSubtitle("Abre el switch con tu huella dactilar")
+                .setTitle("Autenticación Biométrica")
+                .setSubtitle("Hab/Deshab el switch con tu huella dactilar")
                 .setNegativeButtonText("Cancelar")
                 .build();
 
         biometricPrompt.authenticate(promptInfo);
     }
 
-    private void disableButton() {
+    private void deshabilitarBoton() {
         botonAbrirSwitch.setEnabled(false);
         Toast.makeText(getApplicationContext(), "Demasiados intentos fallidos. Intenta nuevamente en 15 minutos.", Toast.LENGTH_LONG).show();
     }
 
-    private void enableButton() {
+    private void habilitarBoton() {
         botonAbrirSwitch.setEnabled(true);
         failedAttempts = 0; // Reiniciar el contador de intentos fallidos
         Toast.makeText(getApplicationContext(), "Ahora puedes intentar nuevamente.", Toast.LENGTH_SHORT).show();
